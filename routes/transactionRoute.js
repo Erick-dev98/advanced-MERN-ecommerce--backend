@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect } = require("../middleWare/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const router = express.Router();
 const {
   transferFund,

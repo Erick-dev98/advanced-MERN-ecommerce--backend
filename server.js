@@ -13,7 +13,7 @@ const productRoute = require("./routes/productRoute");
 const orderRoute = require("./routes/orderRoute");
 const transactionRoute = require("./routes/transactionRoute");
 // const contactRoute = require("./routes/contactRoute");
-const errorHandler = require("./middleWare/errormiddleware");
+const errorHandler = require("./middleware/errormiddleware");
 
 const app = express();
 
@@ -102,7 +102,7 @@ app.get("/response", async (req, res) => {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `FLWSECK_TEST-151ed4b9dbfa272635c6f5be2535a7c4-X`,
+      Authorization: process.env.FLW_SECRET_KEY,
     },
   });
 
