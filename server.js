@@ -13,7 +13,7 @@ const productRoute = require("./routes/productRoute");
 const orderRoute = require("./routes/orderRoute");
 const transactionRoute = require("./routes/transactionRoute");
 // const contactRoute = require("./routes/contactRoute");
-const errorHandler = require("./middleware/errormiddleware");
+const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
 
