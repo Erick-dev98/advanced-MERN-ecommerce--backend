@@ -23,11 +23,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://shopito-app.vercel.app",
-      "https://e7d3-102-91-52-52.ngrok-free.app",
-    ],
+    origin: ["http://localhost:3000", "https://shopito-app.vercel.app"],
     credentials: true,
   })
 );

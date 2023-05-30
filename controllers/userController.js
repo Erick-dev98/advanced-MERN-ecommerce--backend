@@ -9,7 +9,7 @@ const { stripe } = require("../utils");
 
 // Generate Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
 // Register User
@@ -101,9 +101,10 @@ const loginUser = asyncHandler(async (req, res) => {
     res.cookie("token", token, {
       path: "/",
       httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 86400), // 1 day
-      // sameSite: "none",
-      // secure: true,
+      // expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: "none",
+      secure: true,
     });
   }
 

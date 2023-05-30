@@ -38,7 +38,7 @@ const getOrders = asyncHandler(async (req, res) => {
   let orders;
   if (req.user.role === "admin") {
     orders = await Order.find().sort("-createdAt");
-    res.status(200).json(orders);
+    return res.status(200).json(orders);
   }
   orders = await Order.find({ user: req.user.id }).sort("-createdAt");
   res.status(200).json(orders);
