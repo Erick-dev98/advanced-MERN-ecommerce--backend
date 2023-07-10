@@ -156,7 +156,7 @@ const webhook = asyncHandler(async (req, res) => {
   eventType = event.type;
 
   // Handle the event
-  if (eventType === "checkout.session.completed") {
+  if (eventType === "checkout.session.async_payment_succeeded") {
     stripe.customers
       .retrieve(data.customer)
       .then(async (customer) => {
