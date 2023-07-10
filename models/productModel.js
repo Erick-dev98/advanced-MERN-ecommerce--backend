@@ -28,6 +28,12 @@ const productSchema = mongoose.Schema(
       required: [true, "Please add a brand"],
       trim: true,
     },
+    color: {
+      type: String,
+      required: [true, "Please add a color"],
+      default: "As seen",
+      trim: true,
+    },
     quantity: {
       type: Number,
       required: [true, "Please add a quantity"],
@@ -35,11 +41,17 @@ const productSchema = mongoose.Schema(
     },
     sold: {
       type: Number,
+      default: 0,
       trim: true,
     },
     price: {
       type: String,
       required: [true, "Please add a price"],
+      trim: true,
+    },
+    regularPrice: {
+      type: String,
+      // required: [true, "Please add a price"],
       trim: true,
     },
     description: {

@@ -302,6 +302,83 @@ const resetPassword = asyncHandler(async (req, res) => {
   });
 });
 
+// Add product to wishlist
+const addToWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+
+  await User.findOneAndUpdate(
+    { email: req.user.email },
+    { $addToSet: { wishlist: productId } }
+  );
+
+  res.json({ message: "Product added to wishlist" });
+});
+
+//
+const removeFromWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  await User.findOneAndUpdate(
+    { email: req.user.email },
+    { $pull: { wishlist: productId } }
+  );
+
+  res.json({ message: "Product removed to wishlist" });
+});
+
+// Get Wishlist
+const getWishlist = asyncHandler(async (req, res) => {
+  const list = await User.findOne({ email: req.user.email })
+    .select("wishlist")
+    .populate("wishlist");
+
+  res.json(list);
+});
+
+// Save Cart
+const saveCart = asyncHandler(async (req, res) => {
+  const { cartItems } = req.body;
+
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    user.cartItems = cartItems;
+    user.save();
+    res.status(200).json({ message: "Cart saved" });
+  } else {
+    res.status(400);
+    throw new Error("User Not Found");
+  }
+});
+
+// Get Cart
+const getCart = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    // const { _id, name, email, phone, address } = user;
+    res.status(200).json(user.cartItems);
+  } else {
+    res.status(400);
+    throw new Error("User Not Found");
+  }
+});
+
+// Clear Cart
+const clearCart = asyncHandler(async (req, res) => {
+  const { cartItems } = req.body;
+
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    user.cartItems = [];
+    user.save();
+    res.status(200).json({ message: "Cart cleared" });
+  } else {
+    res.status(400);
+    throw new Error("User Not Found");
+  }
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -312,4 +389,10 @@ module.exports = {
   changePassword,
   forgotPassword,
   resetPassword,
+  addToWishlist,
+  removeFromWishlist,
+  getWishlist,
+  saveCart,
+  getCart,
+  clearCart,
 };

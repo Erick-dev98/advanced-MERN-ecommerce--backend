@@ -39,6 +39,13 @@ const orderSchema = mongoose.Schema(
       type: Object,
       required: true,
     },
+    coupon: {
+      type: Object,
+      required: true,
+      default: {
+        name: "nil",
+      },
+    },
   },
   {
     timestamps: true,

@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel");
 const { stripe } = require("../utils");
+const axios = require("axios");
 
 // Transfer Funds
 const transferFund = asyncHandler(async (req, res) => {
@@ -99,88 +100,120 @@ const depositFundStripe = asyncHandler(async (req, res) => {
     cancel_url: process.env.FRONTEND_URL + "/wallet?payment=failed",
   });
 
-  console.log(session);
+  // console.log(session);
   console.log(session.amount_total);
 
   return res.json(session);
 });
 
+// Deposit Fund Stripe
+const depositFund = async (customer, data, description, source) => {
+  await Transaction.create({
+    amount:
+      source === "stripe" ? data.amount_subtotal / 100 : data.amount_subtotal,
+    sender: "Self",
+    receiver: customer.email,
+    description: description,
+    status: "success",
+  });
+
+  // increase the receiver's balance
+  await User.findOneAndUpdate(
+    { email: customer.email },
+    {
+      $inc: {
+        balance:
+          source === "stripe"
+            ? data.amount_subtotal / 100
+            : data.amount_subtotal,
+      },
+    }
+  );
+};
+
 // stripe webhook
+// const endpointSecret =
+//   "whsec_c22fcc4d163d10c1cdcaa13c55aa2cec4ad64c5279e7631856ec96852e6d9d5a";
 const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
 
-const webhook = asyncHandler(async (request, response) => {
-  const sig = request.headers["stripe-signature"];
+const webhook = asyncHandler(async (req, res) => {
+  console.log("Webhook start");
+  const sig = req.headers["stripe-signature"];
 
   let event;
   let data;
   let eventType;
 
   try {
-    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
-    data = event.data.object;
-    eventType = event.type;
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    console.log("Webhook verified");
   } catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
+    console.log("Verif Error ZT", err);
+    res.status(400).send(`Webhook Error: ${err.message}`);
     return;
   }
+  data = event.data.object;
+  eventType = event.type;
 
   // Handle the event
   if (eventType === "checkout.session.completed") {
     stripe.customers
       .retrieve(data.customer)
-      .then((customer) => {
-        console.log(customer);
-        console.log("data:", data);
+      .then(async (customer) => {
+        console.log(customer.email);
+        console.log("data:", data.amount_total);
+        const description = "Stripe Deposit";
+        const source = "stripe";
+        // save the transaction
+        try {
+          depositFund(customer, data, description, source);
+        } catch (error) {
+          console.log(err);
+        }
       })
       .catch((err) => console.log(err.message));
   }
+
+  res.send().end();
 });
 
-// app.post(
-//   "/webhook",
-//   express.raw({ type: "application/json" }),
-//   (request, response) => {
-//     const sig = request.headers["stripe-signature"];
+// Deposit Fund FLW
+const depositFundFLW = asyncHandler(async (req, res) => {
+  const { transaction_id } = req.query;
 
-//     let event;
-//     let data;
-//     let eventType;
+  // Confirm transaction
+  const url = `https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`;
 
-//     try {
-//       event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
-//       data = event.data.object;
-//       eventType = event.type;
-//     } catch (err) {
-//       response.status(400).send(`Webhook Error: ${err.message}`);
-//       return;
-//     }
+  const response = await axios({
+    url,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: process.env.FLW_SECRET_KEY,
+    },
+  });
 
-//     // Handle the event
-//     if (eventType === "checkout.session.completed") {
-//       stripe.customers
-//         .retrieve(data.customer)
-//         .then((customer) => {
-//           console.log(customer);
-//           console.log("data:", data);
-//         })
-//         .catch((err) => console.log(err.message));
-//     }
+  // console.log(response.data.data);
+  const { amount, customer, tx_ref } = response.data.data;
+  // console.log(amount);
+  // console.log(typeof amount);
+  // console.log(customer);
 
-//     // switch (event.type) {
-//     //   case 'checkout.session.async_payment_failed':
-//     //     const checkoutSessionAsyncPaymentFailed = event.data.object;
-//     //     // Then define and call a function to handle the event checkout.session.async_payment_failed
-//     //     break;
-//     //   case 'checkout.session.async_payment_succeeded':
-//     //     const checkoutSessionAsyncPaymentSucceeded = event.data.object;
-//     //     // Update user wallet balance
-//     //     break;
-//     //   // ... handle other event types
-//     //   default:
-//     //     console.log(`Unhandled event type ${event.type}`);
-//     // }
-//   }
-// );
+  const successURL = process.env.FRONTEND_URL + "/wallet?payment=successful";
+  const failureURL = process.env.FRONTEND_URL + "/wallet?payment=failed";
+  if (req.query.status === "successful") {
+    const data = {
+      amount_subtotal: amount,
+    };
+    const description = "Flutterwave Deposit";
+    const source = "flutterwave";
+    depositFund(customer, data, description, source);
+    res.redirect(successURL);
+  } else {
+    res.redirect(failureURL);
+  }
+});
 
 module.exports = {
   transferFund,
@@ -188,4 +221,5 @@ module.exports = {
   getUserTransactions,
   depositFundStripe,
   webhook,
+  depositFundFLW,
 };
