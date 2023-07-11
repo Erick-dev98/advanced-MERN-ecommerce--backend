@@ -30,6 +30,11 @@ const userSchema = mongoose.Schema(
       default: "customer",
       enum: ["customer", "admin"],
     },
+    photo: {
+      type: String,
+      required: [true, "Please add a photo"],
+      default: "https://i.ibb.co/4pDNDk1/avatar.png",
+    },
     phone: {
       type: String,
       default: "+234",

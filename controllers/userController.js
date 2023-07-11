@@ -175,12 +175,33 @@ const updateUser = asyncHandler(async (req, res) => {
       name: updatedUser.name,
       email: updatedUser.email,
       phone: updatedUser.phone,
+      photo: updatedUser.photo,
       address: updatedUser.address,
     });
   } else {
     res.status(404);
     throw new Error("User not found");
   }
+});
+
+// Update Photo
+const updatePhoto = asyncHandler(async (req, res) => {
+  const { photo } = req.body;
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+  user.photo = photo;
+  const updatedUser = await user.save();
+  res.status(200).json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    phone: updatedUser.phone,
+    photo: updatedUser.photo,
+    address: updatedUser.address,
+  });
 });
 
 const changePassword = asyncHandler(async (req, res) => {
@@ -386,6 +407,7 @@ module.exports = {
   getUser,
   getLoginStatus,
   updateUser,
+  updatePhoto,
   changePassword,
   forgotPassword,
   resetPassword,

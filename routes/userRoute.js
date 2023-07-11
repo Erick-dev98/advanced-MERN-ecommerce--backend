@@ -13,6 +13,7 @@ const {
   getCart,
   saveCart,
   clearCart,
+  updatePhoto,
   // changePassword,
   // forgotPassword,
   // resetPassword,
@@ -26,6 +27,7 @@ router.get("/logout", logout);
 router.get("/getUser", protect, getUser);
 router.get("/getLoginStatus", getLoginStatus);
 router.patch("/updateUser", protect, updateUser);
+router.patch("/updatePhoto", protect, updatePhoto);
 // router.patch("/changepassword", protect, changePassword);
 // router.post("/forgotpassword", forgotPassword);
 // router.put("/resetpassword/:resetToken", resetPassword);
